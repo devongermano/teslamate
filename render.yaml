@@ -18,8 +18,6 @@ services:
         value: database
       - key: MQTT_HOST
         value: mosquitto
-    ports:
-      - containerPort: 4000
     disk:
       name: teslamate-data
       mountPath: /opt/app/import
@@ -58,8 +56,6 @@ services:
         value: teslamate
       - key: DATABASE_HOST
         value: database
-    ports:
-      - containerPort: 3000
     disk:
       name: grafana-data
       mountPath: /var/lib/grafana
@@ -73,10 +69,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerCommand: mosquitto -c /mosquitto-no-auth.conf
     disk:
-      name: mosquitto-conf
-      mountPath: /mosquitto/config
-      sizeGB: 10
-    disk:
       name: mosquitto-data
       mountPath: /mosquitto/data
       sizeGB: 10
@@ -84,12 +76,6 @@ services:
 databases:
   - name: teslamate-db
     databaseName: teslamate
-    user: teslamate
-    plan: starter
-    region: oregon
-
-  - name: teslamate-grafana-data
-    databaseName: grafana
     user: teslamate
     plan: starter
     region: oregon
