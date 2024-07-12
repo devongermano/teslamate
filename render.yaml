@@ -1,7 +1,8 @@
 services:
   - type: web
     name: teslamate
-    env: docker
+    runtime: docker
+    repo: https://github.com/your-repo/teslamate.git
     plan: starter
     dockerfilePath: ./Dockerfile
     envVars:
@@ -19,12 +20,15 @@ services:
         value: mosquitto
     ports:
       - containerPort: 4000
-    volumes:
-      - path: /opt/app/import
+    disk:
+      name: teslamate-data
+      mountPath: /opt/app/import
+      sizeGB: 10
 
   - type: web
     name: database
-    env: docker
+    runtime: docker
+    repo: https://github.com/your-repo/database.git
     plan: starter
     dockerfilePath: ./Dockerfile
     envVars:
@@ -34,12 +38,15 @@ services:
         value: password # insert your secure database password!
       - key: POSTGRES_DB
         value: teslamate
-    volumes:
-      - path: /var/lib/postgresql/data
+    disk:
+      name: teslamate-db
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
 
   - type: web
     name: grafana
-    env: docker
+    runtime: docker
+    repo: https://github.com/your-repo/grafana.git
     plan: starter
     dockerfilePath: ./Dockerfile
     envVars:
@@ -53,25 +60,52 @@ services:
         value: database
     ports:
       - containerPort: 3000
-    volumes:
-      - path: /var/lib/grafana
+    disk:
+      name: grafana-data
+      mountPath: /var/lib/grafana
+      sizeGB: 10
 
   - type: web
     name: mosquitto
-    env: docker
+    runtime: docker
+    repo: https://github.com/your-repo/mosquitto.git
     plan: starter
     dockerfilePath: ./Dockerfile
-    command: mosquitto -c /mosquitto-no-auth.conf
-    volumes:
-      - path: /mosquitto/config
-      - path: /mosquitto/data
+    dockerCommand: mosquitto -c /mosquitto-no-auth.conf
+    disk:
+      name: mosquitto-conf
+      mountPath: /mosquitto/config
+      sizeGB: 10
+    disk:
+      name: mosquitto-data
+      mountPath: /mosquitto/data
+      sizeGB: 10
 
-volumes:
+databases:
   - name: teslamate-db
-    path: /var/lib/postgresql/data
+    databaseName: teslamate
+    user: teslamate
+    plan: starter
+    region: oregon
+
   - name: teslamate-grafana-data
-    path: /var/lib/grafana
-  - name: mosquitto-conf
-    path: /mosquitto/config
-  - name: mosquitto-data
-    path: /mosquitto/data
+    databaseName: grafana
+    user: teslamate
+    plan: starter
+    region: oregon
+
+envVarGroups:
+  - name: teslamate-settings
+    envVars:
+      - key: ENCRYPTION_KEY
+        value: secretkey # replace with a secure key to encrypt your Tesla API tokens
+      - key: DATABASE_USER
+        value: teslamate
+      - key: DATABASE_PASS
+        value: password # insert your secure database password!
+      - key: DATABASE_NAME
+        value: teslamate
+      - key: DATABASE_HOST
+        value: database
+      - key: MQTT_HOST
+        value: mosquitto
